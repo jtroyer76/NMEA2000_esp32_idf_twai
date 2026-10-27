@@ -1,0 +1,16 @@
+{
+  "name": "NMEA2000_esp32_idf_twai",
+  "version": "0.1.0",
+  "description": "CAN driver for the NMEA2000 library on ESP32 using Espressif's TWAI driver, with bus-off recovery and status counters.",
+  "keywords": "nmea2000, n2k, can, twai, esp32",
+  "license": "MIT",
+  "authors": [{ "name": "Jess Troyer" }],
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "dependencies": [
+    { "name": "ttlappalainen/NMEA2000-library", "version": "4.24.1" }
+  ],
+  "export": {
+    "exclude": ["test", ".pio"]
+  }
+}
