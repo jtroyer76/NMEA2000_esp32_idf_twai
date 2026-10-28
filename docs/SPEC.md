@@ -1,6 +1,6 @@
 # NMEA2000_esp32_idf_twai — Spec
 
-Status: **draft for review**, 2026-10-27. v0.1.0 implemented the same day: 22 host tests pass (`pio test -e native`), compiles for the M5Stack Atom Lite (`pio run -e m5stack-atom`). Not yet run on hardware.
+Status: **draft for review**, 2026-10-27. v0.1.0 implemented the same day: 22 host tests pass (`pio test -e native`), compiles for the M5Stack Atom Lite (`pio run -e m5stack-atom`). 2026-10-27: first run on a live N2k bus, in the AIS gateway stage 1 test (a short session, CAN only): error-active, TEC/REC 0, about 3850 frames/min received. A floating bus correctly showed error passive (REC 135). Long-run behaviour is unproven (see Q4).
 
 ## 1. Purpose
 
@@ -120,6 +120,11 @@ A fake `driver/twai.h` layer with scripted states and return codes. Cases:
 - In the AIS gateway trial: address claim, AIS PGNs on the plotter, counters on the status page. Bus-off is not forced on the live bus (AIS gateway spec §7); a natural one shows in the counters.
 
 ## 6. Open questions
-- **Q1.** Timo's view on what "use the library properly" means for a TWAI driver, and whether his unpublished restart solution (NMEA2000 #468) affects §4.4. Asked in [ttlappalainen/NMEA2000_esp32#39](https://github.com/ttlappalainen/NMEA2000_esp32/issues/39), 2026-10-27 (pending).
+- **Q1.** Timo's view on what "use the library properly" means for a TWAI driver, and whether his unpublished restart solution (NMEA2000 #468) affects §4.4. Asked in [ttlappalainen/NMEA2000_esp32#39](https://github.com/ttlappalainen/NMEA2000_esp32/issues/39), 2026-10-27. **Answered 2026-10-28:**
+  1. The Sergei driver at least didn't respect the buffer sizes set through the library.
+  2. Sizing the TWAI queues from `MaxCANReceiveFrames`/`MaxCANSendFrames`: yes (what §4 does).
+  3. His restart solution is built for several platforms, not only ESP32, and isn't published yet. He didn't comment directly on recovery from inside `CANGetFrame()`. He is testing a modified [phatpaul/NMEA2000_esp32_autorestart](https://github.com/phatpaul/NMEA2000_esp32_autorestart) whose restart loop is called from an unpublished library hook, `CANGetDriverStatus`, which `ParseMessages` calls. That is the same idea as ours: supervision driven from the library's parse path.
+  4. Ignoring `wait_sent` is fine. The ESP32's single FIFO keeps fast-packet frames in order. A possible refinement: priority ordering (a higher-priority frame ahead of a queued fast packet) with a short TWAI TX queue plus the library's `tPriorityRingBuffer` inside the driver.
+- **Q4 (from Timo, 2026-10-28).** He has seen an ESP32 state where the controller **still transmits but receives nothing, with no TWAI error flag set**. It took 2–20 days to appear in a system of about 50 devices. So two weeks on a 10–15 device bus "is just a start". §4.4 can't detect this, because it relies on the controller's state. Candidate: an RX-silence watchdog (no frames received for N seconds while the bus is otherwise healthy → stop and restart, or reinstall, the driver). That only works on a bus with steady traffic; the boat bus showed about 3850 frames/min on 2026-10-27. Not decided.
 - **Q2.** Supervision interval and restart back-off values (10 ms / 1 s proposed).
 - **Q3.** Should the driver also offer an optional "stuck in RECOVERING too long → stop/uninstall/reinstall" escalation, or is that over-engineering?

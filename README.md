@@ -2,7 +2,7 @@
 
 CAN driver for Timo Lappalainen's [NMEA2000](https://github.com/ttlappalainen/NMEA2000) library on ESP32, built on Espressif's TWAI driver (`driver/twai.h`).
 
-Status: **v0.1.0, host-tested, not yet run on hardware.** See [docs/SPEC.md](docs/SPEC.md).
+Status: **v0.1.0, early.** 22 host tests. First short run on a live NMEA 2000 bus on 2026-10-27 (clean: error-active, TEC/REC 0); long-run behaviour is not yet proven. See [docs/SPEC.md](docs/SPEC.md), including the open questions.
 
 ## Use
 
